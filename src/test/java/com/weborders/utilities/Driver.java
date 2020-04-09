@@ -10,21 +10,17 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 public class Driver {
 
     //same for everyone
-    private static ThreadLocal<WebDriver>  driverPool = new ThreadLocal<>();
-
+    private static ThreadLocal<WebDriver> driverPool = new ThreadLocal<>();
     //so no one can create object of Driver class
     //everyone should call static getter method instead
     private Driver() {
-
     }
-
-    public static WebDriver getDriver() {
+    public synchronized static WebDriver getDriver() {
         //if webdriver object doesn't exist
         //create it
         if (driverPool.get() == null) {
             //specify browser type in configuration.properties file
             String browser = ConfigurationReader.getProperty("browser").toLowerCase();
-
             switch (browser) {
                 case "chrome":
                     WebDriverManager.chromedriver().version("79").setup();
@@ -37,11 +33,11 @@ public class Driver {
                     WebDriverManager.chromedriver().version("79").setup();
                     ChromeOptions options = new ChromeOptions();
                     options.setHeadless(true);
-                    driverPool.set(  new ChromeDriver(options));
+                    driverPool.set(new ChromeDriver(options));
                     break;
                 case "firefox":
                     WebDriverManager.firefoxdriver().setup();
-                    driverPool.set( new FirefoxDriver());
+                    driverPool.set(new FirefoxDriver());
                     break;
                 default:
                     throw new RuntimeException("Wrong browser name!");
@@ -49,11 +45,10 @@ public class Driver {
         }
         return driverPool.get();
     }
-
     public static void closeDriver() {
         if (driverPool != null) {
             driverPool.get().quit();
-            driverPool = null;
+            driverPool.remove();
         }
     }
 }
